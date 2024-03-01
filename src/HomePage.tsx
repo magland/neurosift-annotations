@@ -1,7 +1,5 @@
-import { FunctionComponent, useCallback } from "react";
-import LoginButton from "./LoginButton";
+import { FunctionComponent } from "react";
 // import { getGitHubAccessToken } from "./App";
-import { Hyperlink } from "@fi-sci/misc";
 
 type Props = {
   // none
