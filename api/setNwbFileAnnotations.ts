@@ -3,6 +3,21 @@ import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Octokit } from "@octokit/rest";
 import { isString, validateObject } from "@fi-sci/misc";
 
+const allowCors = (fn: Function) => async (req: VercelRequest, res: VercelResponse) => {
+  const allowedOrigins = ['http://localhost:4200', 'https://flatironinstitute.github.io'];
+  const origin = req.headers.origin || '';
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  return await fn(req, res);
+};
+
 type SetNwbFileAnnotationsRequest = {
   repo: string
   dandisetId: string
@@ -21,7 +36,7 @@ const isSetNwbFileAnnotationsRequest = (req: any): req is SetNwbFileAnnotationsR
   });
 }
 
-export default async (req: VercelRequest, res: VercelResponse) => {
+export default allowCors(async (req: VercelRequest, res: VercelResponse) => {
   // check that it is a post request
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -80,7 +95,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     console.error("Failed to update file:", error);
     res.status(error.status || 500).json({ error: "Failed to update file" });
   }
-};
+});
 
 type GetNwbFileAnnotationsRequest = {
   repo: string
@@ -98,7 +113,7 @@ const isGetNwbFileAnnotationsRequest = (req: any): req is GetNwbFileAnnotationsR
   });
 }
 
-export async function getNwbFileAnnotations(req: VercelRequest, res: VercelResponse) {
+export const getNwbFileAnnotations = allowCors((req: VercelRequest, res: VercelResponse) => {
   // check that it is a post request
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -141,7 +156,7 @@ export async function getNwbFileAnnotations(req: VercelRequest, res: VercelRespo
     console.error("Failed to get file:", error);
     res.status(error.status || 500).json({ error: "Failed to get file" });
   }
-}
+});
 
 const parseRepo = (repo: string) => {
   const [username, repoName] = repo.split("/");
