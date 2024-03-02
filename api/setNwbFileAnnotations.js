@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { VercelRequest, VercelResponse } from "@vercel/node";
-import { Octokit } from "@octokit/rest";
 import { isString, validateObject } from "@fi-sci/misc";
+import { Octokit } from "@octokit/rest";
 
-type FF = (req: VercelRequest, res: VercelResponse) => Promise<void>;
 
-const allowCors = (fn: FF) => async (req: VercelRequest, res: VercelResponse) => {
+const allowCors = (fn) => async (req, res) => {
   const allowedOrigins = ['http://localhost:4200', 'https://flatironinstitute.github.io'];
   const origin = req.headers.origin || '';
   if (allowedOrigins.includes(origin)) {
@@ -20,15 +18,25 @@ const allowCors = (fn: FF) => async (req: VercelRequest, res: VercelResponse) =>
   return await fn(req, res);
 };
 
-type SetNwbFileAnnotationsRequest = {
-  repo: string
-  dandisetId: string
-  assetPath: string
-  assetId: string
-  annotations: {[key: string]: string}[]
-}
+// type SetNwbFileAnnotationsRequest = {
+//   repo: string
+//   dandisetId: string
+//   assetPath: string
+//   assetId: string
+//   annotations: {[key: string]: string}[]
+// }
 
-const isSetNwbFileAnnotationsRequest = (req: any): req is SetNwbFileAnnotationsRequest => {
+// const isSetNwbFileAnnotationsRequest = (req: any): req is SetNwbFileAnnotationsRequest => {
+//   return validateObject(req, {
+//     repo: isString,
+//     dandisetId: isString,
+//     assetPath: isString,
+//     assetId: isString,
+//     annotations: () => true
+//   });
+// }
+
+const isSetNwbFileAnnotationsRequest = (req) => {
   return validateObject(req, {
     repo: isString,
     dandisetId: isString,
@@ -38,7 +46,7 @@ const isSetNwbFileAnnotationsRequest = (req: any): req is SetNwbFileAnnotationsR
   });
 }
 
-export default allowCors(async (req: VercelRequest, res: VercelResponse) => {
+export default allowCors(async (req, res) => {
   // check that it is a post request
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -62,19 +70,19 @@ export default allowCors(async (req: VercelRequest, res: VercelResponse) => {
   const {username, repoName} = parseRepo(repo);
 
   const filePath = getFilePathForAssetAnnotations(dandisetId, assetPath, assetId);
-  const newContent = annotations.map((annotation) => jsonStringifyDeterministic(annotation)).join("\n");
+  const newContent = annotations.map((annotation) => JSONStringifyDeterministic(annotation)).join("\n");
 
   try {
     // Check if the file exists to get its SHA (necessary for updating)
-    let sha: string | undefined = undefined;
+    let sha = undefined;
     try {
       const { data: fileData } = await octokit.rest.repos.getContent({
         owner: username,
         repo: repoName,
         path: filePath,
       });
-      sha = (fileData as any).sha;
-    } catch (error: any) {
+      sha = (fileData).sha;
+    } catch (error) {
       // If error is not because the file doesn't exist, rethrow it
       if (error.status !== 404) {
         throw error;
@@ -88,25 +96,35 @@ export default allowCors(async (req: VercelRequest, res: VercelResponse) => {
       repo: repoName,
       path: filePath,
       message: `Updating file ${filePath}`,
+      // eslint-disable-next-line no-undef
       content: Buffer.from(newContent).toString("base64"),
       sha, // This is optional and only needed for updates
     });
 
     res.status(200).json(response.data);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Failed to update file:", error);
     res.status(error.status || 500).json({ error: "Failed to update file" });
   }
 });
 
-type GetNwbFileAnnotationsRequest = {
-  repo: string
-  dandisetId: string
-  assetPath: string
-  assetId: string
-}
+// type GetNwbFileAnnotationsRequest = {
+//   repo: string
+//   dandisetId: string
+//   assetPath: string
+//   assetId: string
+// }
 
-const isGetNwbFileAnnotationsRequest = (req: any): req is GetNwbFileAnnotationsRequest => {
+// const isGetNwbFileAnnotationsRequest = (req: any): req is GetNwbFileAnnotationsRequest => {
+//   return validateObject(req, {
+//     repo: isString,
+//     dandisetId: isString,
+//     assetPath: isString,
+//     assetId: isString
+//   });
+// }
+
+const isGetNwbFileAnnotationsRequest = (req) => {
   return validateObject(req, {
     repo: isString,
     dandisetId: isString,
@@ -115,7 +133,7 @@ const isGetNwbFileAnnotationsRequest = (req: any): req is GetNwbFileAnnotationsR
   });
 }
 
-export const getNwbFileAnnotations = allowCors(async (req: VercelRequest, res: VercelResponse) => {
+export const getNwbFileAnnotations = allowCors(async (req, res) => {
   // check that it is a post request
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -154,10 +172,11 @@ export const getNwbFileAnnotations = allowCors(async (req: VercelRequest, res: V
 
     console.info(`Rate limit: ${rateLimitRemaining}/${rateLimitLimit} (reset in ${timeToResetSeconds} seconds)`)
 
-    const content = Buffer.from((fileData as any).content, "base64").toString("utf-8");
-    const annotations = content.split("\n").map((line: string) => JSON.parse(line));
+    // eslint-disable-next-line no-undef
+    const content = Buffer.from((fileData).content, "base64").toString("utf-8");
+    const annotations = content.split("\n").filter(a => !!a).map((line) => JSON.parse(line));
     res.status(200).json(annotations);
-  } catch (error: any) {
+  } catch (error) {
     if (error.status === 404) {
       res.status(200).json([]);
       return;
@@ -167,13 +186,22 @@ export const getNwbFileAnnotations = allowCors(async (req: VercelRequest, res: V
   }
 });
 
-const parseRepo = (repo: string) => {
+const parseRepo = (repo) => {
   const [username, repoName] = repo.split("/");
   return {username, repoName};
 }
 
-const getFilePathForAssetAnnotations = (dandisetId: string, assetPath: string, assetId: string) => {
+const getFilePathForAssetAnnotations = (dandisetId, assetPath, assetId) => {
   return `dandisets/${dandisetId}/assets/${assetPath}/${assetId}/annotations.jsonl`;
 }
 
-const jsonStringifyDeterministic = (obj: any) => JSON.stringify(obj, Object.keys(obj).sort());
+// Thanks: https://stackoverflow.com/questions/16167581/sort-object-properties-and-json-stringify
+export const JSONStringifyDeterministic = (obj, space = undefined) => {
+  const allKeys = [];
+  JSON.stringify(obj, function (key, value) {
+    allKeys.push(key);
+    return value;
+  });
+  allKeys.sort();
+  return JSON.stringify(obj, allKeys, space);
+};

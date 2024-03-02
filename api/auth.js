@@ -1,9 +1,10 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
 
-export default async (req: VercelRequest, res: VercelResponse) => {
+export default async (req, res) => {
   const code = req.query.code;
+  // eslint-disable-next-line no-undef
   const clientId = process.env.VITE_GITHUB_CLIENT_ID;
+  // eslint-disable-next-line no-undef
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
   
   const tokenResponse = await axios.post(`https://github.com/login/oauth/access_token`, {
