@@ -3,7 +3,9 @@ import { VercelRequest, VercelResponse } from "@vercel/node";
 import { Octokit } from "@octokit/rest";
 import { isString, validateObject } from "@fi-sci/misc";
 
-const allowCors = (fn: Function) => async (req: VercelRequest, res: VercelResponse) => {
+type FF = (req: VercelRequest, res: VercelResponse) => Promise<void>;
+
+const allowCors = (fn: FF) => async (req: VercelRequest, res: VercelResponse) => {
   const allowedOrigins = ['http://localhost:4200', 'https://flatironinstitute.github.io'];
   const origin = req.headers.origin || '';
   if (allowedOrigins.includes(origin)) {
@@ -113,7 +115,7 @@ const isGetNwbFileAnnotationsRequest = (req: any): req is GetNwbFileAnnotationsR
   });
 }
 
-export const getNwbFileAnnotations = allowCors((req: VercelRequest, res: VercelResponse) => {
+export const getNwbFileAnnotations = allowCors(async (req: VercelRequest, res: VercelResponse) => {
   // check that it is a post request
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -139,11 +141,18 @@ export const getNwbFileAnnotations = allowCors((req: VercelRequest, res: VercelR
   const filePath = getFilePathForAssetAnnotations(dandisetId, assetPath, assetId);
 
   try {
-    const { data: fileData } = await octokit.rest.repos.getContent({
+    const { data: fileData, headers } = await octokit.rest.repos.getContent({
       owner: username,
       repo: repoName,
       path: filePath,
     });
+
+    const rateLimitLimit = headers['x-ratelimit-limit']
+    const rateLimitRemaining = headers['x-ratelimit-remaining']
+    const rateLimitReset = headers['x-ratelimit-reset'] || 0
+    const timeToResetSeconds = Number(rateLimitReset) - Math.floor(Date.now() / 1000)
+
+    console.info(`Rate limit: ${rateLimitRemaining}/${rateLimitLimit} (reset in ${timeToResetSeconds} seconds)`)
 
     const content = Buffer.from((fileData as any).content, "base64").toString("utf-8");
     const annotations = content.split("\n").map((line: string) => JSON.parse(line));
