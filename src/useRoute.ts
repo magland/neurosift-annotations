@@ -6,6 +6,8 @@ export type Route = {
 } | {
     page: 'loggedIn'
     accessToken: string
+} | {
+    page: 'logIn'
 }
 
 const useRoute = () => {
@@ -25,6 +27,11 @@ const useRoute = () => {
                 accessToken
             }
         }
+        else if (p === '/logIn') {
+            return {
+                page: 'logIn'
+            }
+        }
         else {
             return {
                 page: 'home'
@@ -35,6 +42,9 @@ const useRoute = () => {
     const setRoute = useCallback((r: Route) => {
         if (r.page === 'loggedIn') {
             navigate(`/loggedIn?access_token=${r.accessToken}`)
+        }
+        else if (r.page === 'logIn') {
+            navigate('/logIn')
         }
         else {
             navigate('/')

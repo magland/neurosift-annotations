@@ -1,6 +1,8 @@
 import './App.css'
 import { BrowserRouter } from 'react-router-dom'
-import LoginButton from './LoginButton'
+import HomePage from './HomePage'
+import LogInPage from './LogInPage'
+import useRoute from './useRoute'
 // import useRoute from './useRoute'
 
 function App() {
@@ -12,13 +14,16 @@ function App() {
 }
 
 function MainWindow() {
-  // const { route } = useRoute()
-  return (
-    <div>
-      <h3>Log in using GitHub in order to use Neurosift Annotations</h3>
-      <LoginButton />
-    </div>
-  )
+  const { route } = useRoute()
+  if (route.page === 'home') {
+    return <HomePage />
+  }
+  else if (route.page === 'logIn') {
+    return <LogInPage />
+  }
+  else {
+    return <div>Invalid route</div>
+  }
 }
 
 export default App
