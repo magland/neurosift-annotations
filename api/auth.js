@@ -21,5 +21,5 @@ export default async (req, res) => {
   // Here, you can use the access token to perform actions on behalf of the user.
   // For example, writing to a repository specified by the user.
 
-  res.redirect(`https://flatironinstitute.github.io/neurosift?p=/neurosift-annotations-login&access_token=${accessToken}`);
+  res.redirect(`https://neurosift.app?p=/neurosift-annotations-login&access_token=${accessToken}`);
 };

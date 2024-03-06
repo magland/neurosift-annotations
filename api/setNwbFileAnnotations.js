@@ -4,7 +4,7 @@ import { Octokit } from "@octokit/rest";
 
 
 const allowCors = (fn) => async (req, res) => {
-  const allowedOrigins = ['http://localhost:4200', 'https://flatironinstitute.github.io'];
+  const allowedOrigins = ['http://localhost:4200', 'https://flatironinstitute.github.io', 'https://neurosift.app']
   const origin = req.headers.origin || '';
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
