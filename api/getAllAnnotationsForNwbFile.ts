@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import allowCors from "../apiHelpers/allowCors";
-import { deleteNwbFileAnnotationFromCache, getNwbFileAnnotationsFromCache, setNwbFileAnnotationInCache } from "../apiHelpers/cachedNwbFileAnnotations";
+import { getNwbFileAnnotationsFromCache, setNwbFileAnnotationInCache } from "../apiHelpers/cachedNwbFileAnnotations";
 import getAnnotationFromGitHub from "../apiHelpers/getAnnotationFromGitHub";
 import { CachedNwbFileAnnotation, NwbFileAnnotation, isGetAllAnnotationsForNwbFileRequest, toNwbFileAnnotation } from "../apiHelpers/types";
 import { getFilePathForAssetAnnotations } from "../apiHelpers/utils";
