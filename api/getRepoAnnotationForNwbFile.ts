@@ -1,0 +1,47 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import allowCors from "../apiHelpers/allowCors";
+import { getNwbFileAnnotationsFromCache } from "../apiHelpers/cachedNwbFileAnnotations";
+import { isGetRepoAnnotationForNwbFile, toNwbFileAnnotation } from "../apiHelpers/types";
+
+export default allowCors(async (req, res) => {
+  // check that it is a post request
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+  const rr = req.body;
+  if (!isGetRepoAnnotationForNwbFile(rr)) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  const { dandiInstanceName, dandisetId, assetPath, assetId, repo } = rr;
+  const accessToken = req.headers.authorization?.split(" ")[1]; // Extract the token
+
+  if (!accessToken) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const cachedAnnotations = await getNwbFileAnnotationsFromCache({
+    dandiInstanceName,
+    dandisetId,
+    assetPath,
+    assetId,
+    accessToken,
+    repo
+  });
+  
+  if (cachedAnnotations.length === 0) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  if (cachedAnnotations.length > 1) {
+    res.status(500).json({ error: "Unexpected: too many cached annotations found." });
+    return;
+  }
+
+  res.status(200).json({
+    annotation: toNwbFileAnnotation(cachedAnnotations[0])
+  });
+});

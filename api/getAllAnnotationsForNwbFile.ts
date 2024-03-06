@@ -1,0 +1,83 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import allowCors from "../apiHelpers/allowCors";
+import { deleteNwbFileAnnotationFromCache, getNwbFileAnnotationsFromCache, setNwbFileAnnotationInCache } from "../apiHelpers/cachedNwbFileAnnotations";
+import getAnnotationFromGitHub from "../apiHelpers/getAnnotationFromGitHub";
+import { CachedNwbFileAnnotation, NwbFileAnnotation, isGetAllAnnotationsForNwbFileRequest, toNwbFileAnnotation } from "../apiHelpers/types";
+import { getFilePathForAssetAnnotations } from "../apiHelpers/utils";
+
+export default allowCors(async (req, res) => {
+  // check that it is a post request
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+  const rr = req.body;
+  if (!isGetAllAnnotationsForNwbFileRequest(rr)) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  const { dandiInstanceName, dandisetId, assetPath, assetId } = rr;
+  const accessToken = req.headers.authorization?.split(" ")[1]; // Extract the token
+
+  if (!accessToken) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const cachedAnnotations = await getNwbFileAnnotationsFromCache({
+    dandiInstanceName,
+    dandisetId,
+    assetPath,
+    assetId
+  });
+
+  const allRepos = [...new Set(cachedAnnotations.map((a) => a.repo))];
+  
+  const repoPath = getFilePathForAssetAnnotations(dandiInstanceName, dandisetId, assetPath, assetId);
+
+  const updatedNwbFileAnnotations: NwbFileAnnotation[] = [];
+  for (const repo of allRepos) {
+    const cachedAnnotation = cachedAnnotations.find((a) => (a.repo === repo && a.accessToken === accessToken));
+    const elapsed = Date.now() - (cachedAnnotation?.timestampCached || 0);
+    if ((!cachedAnnotation) || (elapsed > 1000 * 60)) {
+      // if more than a minute (or doesn't exist), then we need to get it again
+      const a = await getAnnotationFromGitHub({
+        repo,
+        repoPath,
+        accessToken
+      });
+      const newCachedAnnotation: CachedNwbFileAnnotation = {
+        dandiInstanceName,
+        dandisetId,
+        assetPath,
+        assetId,
+        repo,
+        repoPath,
+        annotationItems: a,
+        timestampCached: Date.now(),
+        accessToken,
+      };
+      await setNwbFileAnnotationInCache(newCachedAnnotation);
+      if (newCachedAnnotation.annotationItems) {
+        updatedNwbFileAnnotations.push(toNwbFileAnnotation(newCachedAnnotation));
+      }
+    } else {
+      updatedNwbFileAnnotations.push(toNwbFileAnnotation(cachedAnnotation));
+    }
+  }
+
+  // ACTUALLY: it's important not to delete the old cached items because this is the only way that notes are discovered
+  // // delete the expired cached annotations that are not corresponding to this accessToken
+  // for (const cachedAnnotation of cachedAnnotations) {
+  //   if (cachedAnnotation.accessToken !== accessToken) {
+  //     const elapsed = Date.now() - cachedAnnotation.timestampCached;
+  //     if (elapsed > 1000 * 60) {
+  //       await deleteNwbFileAnnotationFromCache(cachedAnnotation);
+  //     }
+  //   }
+  // }
+
+  res.status(200).json({
+    annotations: updatedNwbFileAnnotations,
+  });
+});

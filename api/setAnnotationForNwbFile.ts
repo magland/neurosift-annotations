@@ -1,0 +1,51 @@
+import allowCors from "../apiHelpers/allowCors";
+import { setNwbFileAnnotationInCache } from "../apiHelpers/cachedNwbFileAnnotations";
+import putAnnotationToGitHub from "../apiHelpers/putAnnotationToGitHub";
+import { CachedNwbFileAnnotation, isSetAnnotationForNwbFileRequest } from "../apiHelpers/types";
+import { getFilePathForAssetAnnotations } from "../apiHelpers/utils";
+
+export default allowCors(async (req, res) => {
+  // check that it is a post request
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+  const rr = req.body;
+  if (!isSetAnnotationForNwbFileRequest(rr)) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  const { dandiInstanceName, dandisetId, assetPath, assetId, annotationItems, repo } = rr;
+
+    const accessToken = req.headers.authorization?.split(" ")[1]; // Extract the token
+
+    if (!accessToken) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const repoPath = getFilePathForAssetAnnotations(dandiInstanceName, dandisetId, assetPath, assetId);
+
+    await putAnnotationToGitHub({
+        accessToken,
+        repo,
+        repoPath,
+        annotationItems
+    })
+
+    const cachedAnnotation: CachedNwbFileAnnotation = {
+        dandiInstanceName,
+        dandisetId,
+        assetPath,
+        assetId,
+        repo,
+        repoPath,
+        annotationItems,
+        timestampCached: Date.now(),
+        accessToken,
+    };
+
+    await setNwbFileAnnotationInCache(cachedAnnotation);
+
+    res.status(200).json({ success: true });
+});
