@@ -54,15 +54,30 @@ export default allowCors(async (req, res) => {
       enoughInfoProvided = true;
     }
     if (assetPath) {
-      query['assetPath'] = assetPath;
+      if (assetPath !== '<undefined>') {
+        query['assetPath'] = assetPath;
+      }
+      else {
+        query['assetPath'] = { $exists: false };
+      }
     }
     if (assetId) {
-      query['assetId'] = assetId;
-      enoughInfoProvided = true;
+      if (assetId !== '<undefined>') {
+        query['assetId'] = assetId;
+        enoughInfoProvided = true;
+      }
+      else {
+        query['assetId'] = { $exists: false };
+      }
     }
     if (assetUrl) {
-      query['assetUrl'] = assetUrl;
-      enoughInfoProvided = true;
+      if (assetUrl !== '<undefined>') {
+        query['assetUrl'] = assetUrl;
+        enoughInfoProvided = true;
+      }
+      else {
+        query['assetUrl'] = { $exists: false };
+      }
     }
     if (!enoughInfoProvided) {
       throw Error("Not enough info provided in request for query.");
@@ -73,6 +88,7 @@ export default allowCors(async (req, res) => {
     for (const x of a) {
       removeMongoIdField(x)
       if (!isNeurosiftAnnotation(x)) {
+        console.warn(x);
         throw Error("Invalid annotation found in database");
       }
       annotations.push(x);
@@ -138,7 +154,7 @@ export const addAnnotationHandler = allowCors(async (req, res) => {
 
     const annotationId = generateRandomString(32);
 
-    const annotationDoc = {
+    const annotationDoc: NeurosiftAnnotation = {
       annotationId,
       userId,
       annotationType,
@@ -148,8 +164,9 @@ export const addAnnotationHandler = allowCors(async (req, res) => {
       assetPath,
       assetId,
       assetUrl,
-      timestamp: Date.now()
-    };
+      timestampCreated: Date.now()
+    }
+    removeUndefinedFields(annotationDoc);
 
     await collection.insertOne(annotationDoc);
 
@@ -243,6 +260,14 @@ const getUserIdForGitHubAccessToken = async (gitHubAccessToken: string) => {
 
 const removeMongoIdField = (x: any) => {
   delete x['_id'];
+}
+
+const removeUndefinedFields = (x: any) => {
+  for (const key in x) {
+    if ((x[key] === undefined) || (x[key] === null) || (x[key] === '')) {
+      delete x[key];
+    }
+  }
 }
 
 const generateRandomString = (length: number) => {
