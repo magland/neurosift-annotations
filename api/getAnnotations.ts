@@ -20,6 +20,7 @@ export default allowCors(async (req, res) => {
     annotationType,
     dandiInstanceName,
     dandisetId,
+    dandisetVersion,
     assetPath,
     assetId,
     assetUrl
@@ -52,6 +53,12 @@ export default allowCors(async (req, res) => {
       }
       query['dandisetId'] = dandisetId;
       enoughInfoProvided = true;
+    }
+    if (dandisetVersion) {
+      if (!dandiInstanceName) {
+        throw Error("dandiInstanceName must be provided if dandisetVersion is provided");
+      }
+      query['dandisetVersion'] = dandisetVersion;
     }
     if (assetPath) {
       if (assetPath !== '<undefined>') {
@@ -142,6 +149,7 @@ export const addAnnotationHandler = allowCors(async (req, res) => {
     annotation,
     dandiInstanceName,
     dandisetId,
+    dandisetVersion,
     assetPath,
     assetId,
     assetUrl
@@ -161,6 +169,7 @@ export const addAnnotationHandler = allowCors(async (req, res) => {
       annotation,
       dandiInstanceName,
       dandisetId,
+      dandisetVersion,
       assetPath,
       assetId,
       assetUrl,

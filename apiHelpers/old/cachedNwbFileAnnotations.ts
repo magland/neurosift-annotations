@@ -20,7 +20,7 @@ export const getNwbFileAnnotationsFromCache = async (a: {
     assetPath: a.assetPath,
     assetId: a.assetId
   };
-  
+
   if (a.repo) {
     query['repo'] = a.repo;
   }
