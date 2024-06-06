@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getMongoClient } from "./getMongoClient";
-import { CachedNwbFileAnnotation } from "./types";
+import { getMongoClient } from "./getMongoClient.js";
+import { CachedNwbFileAnnotation } from "./types.js";
 
 export const getNwbFileAnnotationsFromCache = async (a: {
   dandiInstanceName: string;

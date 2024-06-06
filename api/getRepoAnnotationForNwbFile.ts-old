@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import allowCors from "../apiHelpers/allowCors";
-import { getNwbFileAnnotationsFromCache } from "../apiHelpers/cachedNwbFileAnnotations";
-import { isGetRepoAnnotationForNwbFile, toNwbFileAnnotation } from "../apiHelpers/types";
+import allowCors from "../apiHelpers/allowCors.js";
+import { getNwbFileAnnotationsFromCache } from "../apiHelpers/cachedNwbFileAnnotations.js";
+import { isGetRepoAnnotationForNwbFile, toNwbFileAnnotation } from "../apiHelpers/types.js";
 
 export default allowCors(async (req, res) => {
   // check that it is a post request

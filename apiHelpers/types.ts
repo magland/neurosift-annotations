@@ -1,116 +1,118 @@
-import { isArrayOf, isNumber, isString, optional, validateObject } from "@fi-sci/misc";
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type NwbFileAnnotation = {
-  dandiInstanceName: string;
-  dandisetId: string;
-  assetPath: string;
-  assetId: string;
-  repo: string;
-  repoPath: string;
-  annotationItems?: any[]; // undefined means that the file was not found in this repo - but we still want to create a record of this so we don't keep trying to fetch it
-};
+import { isArrayOf, isBoolean, isNumber, isString, optional, validateObject } from "@fi-sci/misc";
 
-export const isNwbFileAnnotation = (obj: any): obj is NwbFileAnnotation => {
-  return validateObject(obj, {
-    dandiInstanceName: isString,
-    dandisetId: isString,
-    assetPath: isString,
-    assetId: isString,
-    repo: isString,
-    repoPath: isString,
-    annotationItems: optional(isArrayOf(() => true)),
-  });
-};
-
-export type CachedNwbFileAnnotation = {
-    dandiInstanceName: string;
-    dandisetId: string;
-    assetPath: string;
-    assetId: string;
-    repo: string;
-    repoPath: string;
-    annotationItems?: any[]; // undefined means that the file was not found in this repo - but we still want to create a record of this so we don't keep trying to fetch it
-    timestampCached: number;
-    accessToken: string;
+export type NeurosiftAnnotation = {
+  annotationId: string
+  userId: string
+  annotationType: string
+  annotation: any
+  timestampCreated: number
+  dandiInstanceName?: string
+  dandisetId?: string
+  assetPath?: string
+  assetId?: string
+  assetUrl?: string
 }
 
-export const isCachedNwbFileAnnotation = (obj: any): obj is CachedNwbFileAnnotation => {
-  return validateObject(obj, {
-    dandiInstanceName: isString,
-    dandisetId: isString,
-    assetPath: isString,
-    assetId: isString,
-    repo: isString,
-    repoPath: isString,
-    annotationItems: optional(isArrayOf(() => true)),
-    timestampCached: isNumber,
-    accessToken: isString,
-  });
-};
-
-export const toNwbFileAnnotation = (a: CachedNwbFileAnnotation): NwbFileAnnotation => {
-  return {
-    dandiInstanceName: a.dandiInstanceName,
-    dandisetId: a.dandisetId,
-    assetPath: a.assetPath,
-    assetId: a.assetId,
-    repo: a.repo,
-    repoPath: a.repoPath,
-    annotationItems: a.annotationItems,
-  };
+export const isNeurosiftAnnotation = (x: any): x is NeurosiftAnnotation => {
+  return validateObject(x, {
+    annotationId: isString,
+    userId: isString,
+    annotationType: isString,
+    annotation: () => (true),
+    timestampCreated: isNumber,
+    dandiInstanceName: optional(isString),
+    dandisetId: optional(isString),
+    assetPath: optional(isString),
+    assetId: optional(isString),
+    assetUrl: optional(isString)
+  })
 }
 
-export type GetRepoAnnotationForNwbFile = {
-  dandiInstanceName: string;
-  dandisetId: string;
-  assetPath: string;
-  assetId: string;
-  repo: string;
-};
+export type GetAnnotationsRequest = {
+  annotationId?: string
+  userId?: string
+  annotationType?: string
+  dandiInstanceName?: string
+  dandisetId?: string
+  assetPath?: string
+  assetId?: string
+  assetUrl?: string
+}
 
-export const isGetRepoAnnotationForNwbFile = (req: any): req is GetRepoAnnotationForNwbFile => {
-  return validateObject(req, {
-    dandiInstanceName: isString,
-    dandisetId: isString,
-    assetPath: isString,
-    assetId: isString,
-    repo: isString,
-  });
-};
+export const isGetAnnotationsRequest = (x: any): x is GetAnnotationsRequest => {
+  return validateObject(x, {
+    annotationId: optional(isString),
+    userId: optional(isString),
+    annotationType: optional(isString),
+    dandiInstanceName: optional(isString),
+    dandisetId: optional(isString),
+    assetPath: optional(isString),
+    assetId: optional(isString),
+    assetUrl: optional(isString),
+  })
+}
 
-export type GetAllAnnotationsForNwbFileRequest = {
-  dandiInstanceName: string;
-  dandisetId: string;
-  assetPath: string;
-  assetId: string;
-};
+export type GetAnnotationsResponse = {
+  annotations: NeurosiftAnnotation[]
+}
 
-export const isGetAllAnnotationsForNwbFileRequest = (req: any): req is GetAllAnnotationsForNwbFileRequest => {
-  return validateObject(req, {
-    dandiInstanceName: isString,
-    dandisetId: isString,
-    assetPath: isString,
-    assetId: isString,
-  });
-};
+export const isGetAnnotationsResponse = (x: any): x is GetAnnotationsResponse => {
+  return validateObject(x, {
+    annotations: isArrayOf(isNeurosiftAnnotation)
+  })
+}
 
-export type SetAnnotationForNwbFileRequest = {
-  dandiInstanceName: string;
-  dandisetId: string;
-  assetPath: string;
-  assetId: string;
-  repo: string;
-  annotationItems: any[];
-};
+export type AddAnnotationRequest = {
+  userId: string
+  annotationType: string
+  annotation: any
+  dandiInstanceName?: string
+  dandisetId?: string
+  assetPath?: string
+  assetId?: string
+  assetUrl?: string
+}
 
-export const isSetAnnotationForNwbFileRequest = (req: any): req is SetAnnotationForNwbFileRequest => {
-  return validateObject(req, {
-    dandiInstanceName: isString,
-    dandisetId: isString,
-    assetPath: isString,
-    assetId: isString,
-    repo: isString,
-    annotationItems: isArrayOf(() => true),
-  });
-};
+export const isAddAnnotationRequest = (x: any): x is AddAnnotationRequest => {
+  return validateObject(x, {
+    userId: isString,
+    annotationType: isString,
+    annotation: () => (true),
+    dandiInstanceName: optional(isString),
+    dandisetId: optional(isString),
+    assetPath: optional(isString),
+    assetId: optional(isString),
+    assetUrl: optional(isString),
+  })
+}
+
+export type AddAnnotationResponse = {
+  annotationId: string
+}
+
+export const isAddAnnotationResponse = (x: any): x is AddAnnotationResponse => {
+  return validateObject(x, {
+    annotationId: isString
+  })
+}
+
+export type DeleteAnnotationRequest = {
+  annotationId: string
+}
+
+export const isDeleteAnnotationRequest = (x: any): x is DeleteAnnotationRequest => {
+  return validateObject(x, {
+    annotationId: isString
+  })
+}
+
+export type DeleteAnnotationResponse = {
+  success: boolean
+}
+
+export const isDeleteAnnotationResponse = (x: any): x is DeleteAnnotationResponse => {
+  return validateObject(x, {
+    success: isBoolean
+  })
+}

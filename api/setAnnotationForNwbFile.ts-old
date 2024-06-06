@@ -1,8 +1,8 @@
-import allowCors from "../apiHelpers/allowCors";
-import { setNwbFileAnnotationInCache } from "../apiHelpers/cachedNwbFileAnnotations";
-import putAnnotationToGitHub from "../apiHelpers/putAnnotationToGitHub";
-import { CachedNwbFileAnnotation, isSetAnnotationForNwbFileRequest } from "../apiHelpers/types";
-import { getFilePathForAssetAnnotations } from "../apiHelpers/utils";
+import allowCors from "../apiHelpers/allowCors.js";
+import { setNwbFileAnnotationInCache } from "../apiHelpers/cachedNwbFileAnnotations.js";
+import putAnnotationToGitHub from "../apiHelpers/putAnnotationToGitHub.js";
+import { CachedNwbFileAnnotation, isSetAnnotationForNwbFileRequest } from "../apiHelpers/types.js";
+import { getFilePathForAssetAnnotations } from "../apiHelpers/utils.js";
 
 export default allowCors(async (req, res) => {
   // check that it is a post request

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Octokit } from "@octokit/rest";
-import { parseRepoUri } from "../apiHelpers/utils";
+import { parseRepoUri } from "./utils.js";
 
 const getAnnotationFromGitHub = async (
   a: {

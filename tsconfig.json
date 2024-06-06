@@ -13,6 +13,8 @@
     "jsx": "react-jsx",
 
     "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "esModuleInterop": true,
 
     /* Linting */
     "strict": true,

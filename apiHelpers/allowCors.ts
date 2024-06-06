@@ -3,8 +3,8 @@ import { VercelRequest, VercelResponse } from "@vercel/node";
 
 const allowCors = (fn: (req: VercelRequest, res: VercelResponse) => Promise<void>) => async (req: VercelRequest, res: VercelResponse) => {
   const allowedOrigins = [
+    "http://localhost:3000",
     "http://localhost:4200",
-    "https://flatironinstitute.github.io",
     "https://neurosift.app",
   ];
   const origin = req.headers.origin || "";

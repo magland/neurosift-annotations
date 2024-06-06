@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Octokit } from "@octokit/rest";
-import { JSONStringifyDeterministic, parseRepoUri } from "../apiHelpers/utils";
+import { JSONStringifyDeterministic, parseRepoUri } from "./utils.js";
 
 const putAnnotationToGitHub = async (a: {
   accessToken: string;
